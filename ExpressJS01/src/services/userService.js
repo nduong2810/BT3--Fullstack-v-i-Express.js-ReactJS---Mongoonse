@@ -1,3 +1,77 @@
+// require("dotenv").config();
+// const User = require("../models/user");
+// const bcrypt = require('bcrypt');
+// const jwt = require("jsonwebtoken");
+//
+// const saltRounds = 10;
+//
+// const createUserService = async (name, email, password) => {
+//     try {
+//         const user = await User.findOne({ email });
+//         if (user) {
+//             console.log(`>>> user exist, chọn 1 email khác: ${email}`);
+//             return null;
+//         }
+//         const hashPassword = await bcrypt.hash(password, saltRounds)
+//         let result = await User.create({ name: name, email: email, password: hashPassword, role: "User" })
+//         return result;
+//     } catch (error) {
+//         return null;
+//     }
+// }
+//
+// const loginService = async (email, password) => {
+//     try {
+//         const user = await User.findOne({ email: email });
+//         if (user) {
+//             const isMatchPassword = await bcrypt.compare(password, user.password);
+//             if (!isMatchPassword) {
+//                 return { EC: 2, EM: "Email/Password không hợp lệ" }
+//             } else {
+//                 const payload = { email: user.email, name: user.name }
+//                 const access_token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRE })
+//                 return { EC: 0, access_token, user: { email: user.email, name: user.name } };
+//             }
+//         } else {
+//             return { EC: 1, EM: "Email/Password không hợp lệ" }
+//         }
+//     } catch (error) {
+//         return null;
+//     }
+// }
+//
+// const getUserService = async () => {
+//     try {
+//         let result = await User.find({}).select("-password");
+//         return result;
+//     } catch (error) {
+//         return null;
+//     }
+// }
+//
+// const updatePasswordService = async (email, newPassword) => {
+//     try {
+//         // Kiểm tra người dùng tồn tại
+//         const user = await User.findOne({ email: email });
+//         if (!user) {
+//             return { EC: 1, EM: "Email không tồn tại trong hệ thống!" };
+//         }
+//
+//         // Băm mật khẩu mới
+//         const hashPassword = await bcrypt.hash(newPassword, saltRounds);
+//
+//         // Cập nhật Database
+//         await User.updateOne({ email: email }, { password: hashPassword });
+//
+//         return { EC: 0, EM: "Đổi mật khẩu thành công!" };
+//     } catch (error) {
+//         console.log(error);
+//         return null;
+//     }
+// }
+// // Thêm vào module.exports:
+// module.exports = { createUserService, loginService, getUserService, updatePasswordService }
+
 require("dotenv").config();
 const User = require("../models/user");
 const bcrypt = require('bcrypt');
@@ -7,22 +81,29 @@ const saltRounds = 10;
 
 const createUserService = async (name, email, password) => {
     try {
-        const user = await User.findOne({ email });
+        const user = await User.findOne({ where: { email } }); // Sửa: thêm chữ where
         if (user) {
             console.log(`>>> user exist, chọn 1 email khác: ${email}`);
-            return null;
+            return { EC: 1, EM: "Email đã tồn tại" }; // Cải tiến thêm báo lỗi
         }
+
         const hashPassword = await bcrypt.hash(password, saltRounds)
-        let result = await User.create({ name: name, email: email, password: hashPassword, role: "User" })
+        let result = await User.create({
+            name: name,
+            email: email,
+            password: hashPassword,
+            role: "User"
+        })
         return result;
     } catch (error) {
+        console.log(error);
         return null;
     }
 }
 
 const loginService = async (email, password) => {
     try {
-        const user = await User.findOne({ email: email });
+        const user = await User.findOne({ where: { email: email } }); // Sửa: thêm chữ where
         if (user) {
             const isMatchPassword = await bcrypt.compare(password, user.password);
             if (!isMatchPassword) {
@@ -36,38 +117,39 @@ const loginService = async (email, password) => {
             return { EC: 1, EM: "Email/Password không hợp lệ" }
         }
     } catch (error) {
+        console.log(error);
         return null;
     }
 }
 
 const getUserService = async () => {
     try {
-        let result = await User.find({}).select("-password");
+        // Sửa: Cách loại bỏ cột password trong Sequelize khác với Mongoose
+        let result = await User.findAll({
+            attributes: { exclude: ['password'] }
+        });
         return result;
     } catch (error) {
+        console.log(error);
         return null;
     }
 }
 
 const updatePasswordService = async (email, newPassword) => {
     try {
-        // Kiểm tra người dùng tồn tại
-        const user = await User.findOne({ email: email });
+        const user = await User.findOne({ where: { email: email } });
         if (!user) {
             return { EC: 1, EM: "Email không tồn tại trong hệ thống!" };
         }
-
-        // Băm mật khẩu mới
         const hashPassword = await bcrypt.hash(newPassword, saltRounds);
-
-        // Cập nhật Database
-        await User.updateOne({ email: email }, { password: hashPassword });
-
+        await User.update({ password: hashPassword }, { where: { email: email } }); // Sửa: Cú pháp update
         return { EC: 0, EM: "Đổi mật khẩu thành công!" };
     } catch (error) {
         console.log(error);
         return null;
     }
 }
-// Thêm vào module.exports:
-module.exports = { createUserService, loginService, getUserService, updatePasswordService }
+
+module.exports = {
+    createUserService, loginService, getUserService, updatePasswordService
+}

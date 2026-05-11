@@ -12,7 +12,7 @@ const RegisterPage = () => {
         try {
             const res = await createUserApi(name, email, password);
             // Nếu API trả về dữ liệu và không có thuộc tính message lỗi
-            if (res && res._id) {
+            if (res && res.id) {
                 notification.success({
                     message: "ĐĂNG KÝ THÀNH CÔNG",
                     description: "Tài khoản đã được tạo, vui lòng đăng nhập."

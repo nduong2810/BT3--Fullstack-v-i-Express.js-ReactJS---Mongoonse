@@ -14,8 +14,8 @@ const UserPage = () => {
         fetchUser();
     }, [])
 
-    const columns = [ { title: 'Id', dataIndex: '_id', }, { title: 'Email', dataIndex: 'email', }, { title: 'Name', dataIndex: 'name', }, { title: 'Role', dataIndex: 'role', } ];
+    const columns = [ { title: 'Id', dataIndex: 'id', }, { title: 'Email', dataIndex: 'email', }, { title: 'Name', dataIndex: 'name', }, { title: 'Role', dataIndex: 'role', } ];
 
-    return ( <div style={{ padding: 30 }}> <Table bordered dataSource={dataSource} columns={columns} rowKey={"_id"} /> </div> )
+    return ( <div style={{ padding: 30 }}> <Table bordered dataSource={dataSource} columns={columns} rowKey={"id"} /> </div> )
 }
 export default UserPage;

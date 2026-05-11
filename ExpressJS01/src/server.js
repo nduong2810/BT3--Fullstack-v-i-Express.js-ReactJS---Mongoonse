@@ -3,7 +3,7 @@ const apiRoutes = require('./routes/api');
 const cors = require('cors');
 const express = require('express');
 const configViewEngine = require('./config/viewEngine');
-const connection = require('./config/database');
+const {connection} = require('./config/database');
 const { getHomepage } = require('./controllers/homeController');
 
 const app = express();
